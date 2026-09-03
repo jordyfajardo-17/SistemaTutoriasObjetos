@@ -1,0 +1,99 @@
+@startuml
+
+title Sistema de Gestión de Tutorías - Diagrama de Clases
+
+abstract class Usuario {
+    - id : String
+    - nombre : String
+    --
+    # Usuario(id : String, nombre : String)
+    + getId() : String
+    + getNombre() : String
+}
+
+class Estudiante {
+    + Estudiante(id : String, nombre : String)
+}
+
+class Docente {
+    + Docente(id : String, nombre : String)
+}
+
+class Disponibilidad {
+    - docente : Docente
+    - inicio : LocalDateTime
+    - fin : LocalDateTime
+    --
+    + Disponibilidad(docente, inicio, fin)
+    + contiene(inicioReserva, finReserva) : boolean
+}
+
+enum EstadoReserva {
+    SOLICITADA
+    CONFIRMADA
+    CANCELADA
+    REPROGRAMADA
+}
+
+class Reserva {
+    - id : String
+    - estudiante : Estudiante
+    - docente : Docente
+    - inicio : LocalDateTime
+    - fin : LocalDateTime
+    - estado : EstadoReserva
+    --
+    + Reserva(id, estudiante, docente, inicio, fin)
+    + confirmar() : void
+    + cancelar() : void
+    + reprogramar(nuevoInicio, nuevoFin) : void
+    + getId() : String
+    + getEstudiante() : Estudiante
+    + getDocente() : Docente
+    + getInicio() : LocalDateTime
+    + getFin() : LocalDateTime
+    + getEstado() : EstadoReserva
+}
+
+interface Notificador {
+    + notificarReservaCreada(reserva : Reserva) : void
+    + notificarReservaConfirmada(reserva : Reserva) : void
+    + notificarReservaCancelada(reserva : Reserva) : void
+}
+
+class NotificadorConsola {
+    + notificarReservaCreada(reserva : Reserva) : void
+    + notificarReservaConfirmada(reserva : Reserva) : void
+    + notificarReservaCancelada(reserva : Reserva) : void
+}
+
+class ServicioReservas {
+    - notificador : Notificador
+    - disponibilidades : List<Disponibilidad>
+    - reservas : List<Reserva>
+    --
+    + ServicioReservas(notificador : Notificador)
+    + agregarDisponibilidad(disponibilidad : Disponibilidad) : void
+    + solicitarReserva(...) : Reserva
+    + confirmarReserva(reserva : Reserva) : void
+    + cancelarReserva(reserva : Reserva) : void
+    + obtenerReservas() : List<Reserva>
+}
+
+Usuario <|-- Estudiante
+Usuario <|-- Docente
+
+Docente "1" -- "0..*" Disponibilidad : publica >
+
+Estudiante "1" -- "0..*" Reserva : solicita >
+Docente "1" -- "0..*" Reserva : atiende >
+
+Reserva --> EstadoReserva : utiliza
+
+ServicioReservas --> Disponibilidad : gestiona
+ServicioReservas --> Reserva : gestiona
+ServicioReservas --> Notificador : utiliza
+
+Notificador <|.. NotificadorConsola
+
+@enduml
